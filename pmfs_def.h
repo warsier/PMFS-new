@@ -205,6 +205,8 @@ struct pmfs_super_block {
 /* INODE HINT  START at 3 */ 
 #define PMFS_FREE_INODE_HINT_START      (3)
 
+#include "pm_instr.h"
+
 /* ======================= Write ordering ========================= */
 
 #define CACHELINE_SIZE  (64)

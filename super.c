@@ -48,7 +48,7 @@ static struct kmem_cache *pmfs_blocknode_cachep;
 static struct kmem_cache *pmfs_transaction_cachep;
 /* FIXME: should the following variable be one per PMFS instance? */
 unsigned int pmfs_dbgmask = 0;
-
+unsigned int pmfs_tracemask = 0;
 #ifdef CONFIG_PMFS_TEST
 static void *first_pmfs_super;
 
@@ -139,14 +139,14 @@ enum {
 	Opt_num_inodes, Opt_mode, Opt_uid,
 	Opt_gid, Opt_blocksize, Opt_wprotect, Opt_wprotectold,
 	Opt_err_cont, Opt_err_panic, Opt_err_ro,
-	Opt_hugemmap, Opt_nohugeioremap, Opt_dbgmask, Opt_bs, Opt_err
+	Opt_hugemmap, Opt_nohugeioremap, Opt_dbgmask, Opt_tracemask, Opt_bs, Opt_err
 };
 
 static const match_table_t tokens = {
 	{ Opt_bpi,	     "bpi=%u"		  },
 	{ Opt_init,	     "init"		  },
-	{ Opt_jsize,     "jsize=%s"		  },
-	{ Opt_num_inodes,"num_inodes=%u"  },
+	{ Opt_jsize,         "jsize=%s"		  },
+	{ Opt_num_inodes,    "num_inodes=%u"  	  },
 	{ Opt_mode,	     "mode=%o"		  },
 	{ Opt_uid,	     "uid=%u"		  },
 	{ Opt_gid,	     "gid=%u"		  },
@@ -158,6 +158,7 @@ static const match_table_t tokens = {
 	{ Opt_hugemmap,	     "hugemmap"		  },
 	{ Opt_nohugeioremap, "nohugeioremap"	  },
 	{ Opt_dbgmask,	     "dbgmask=%u"	  },
+	{ Opt_tracemask,     "tracemask=%u"	  },
 	{ Opt_bs,	     "backing_dev=%s"	  },
 	{ Opt_err,	     NULL		  },
 };
@@ -275,6 +276,11 @@ static int pmfs_parse_options(char *options, struct pmfs_sb_info *sbi,
 			if (match_int(&args[0], &option))
 				goto bad_val;
 			pmfs_dbgmask = option;
+			break;
+		case Opt_tracemask:
+			if (match_int(&args[0], &option))
+				goto bad_val;
+			pmfs_tracemask = option;
 			break;
 		default: {
 			goto bad_opt;
