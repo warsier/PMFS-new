@@ -15,6 +15,8 @@
 #ifndef PM_INSTR_H
 #define PM_INSTR_H
 
+#define __FILENAME__ 			\
+	(strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 extern unsigned int pmfs_tracemask;
 #define pmfs_trace_printk(args ...)     \
     {                                   \
@@ -50,7 +52,7 @@ extern unsigned int pmfs_tracemask;
                         PM_WRT_MARKER,              \
                         (pm_dst),                   \
                         bytes,			    \
-                        __FILE__,                   \
+                        __FILENAME__,                   \
                         __LINE__);                  \
     })
 
@@ -60,7 +62,7 @@ extern unsigned int pmfs_tracemask;
                         PM_WRT_MARKER,              \
                         &(pm_dst),                  \
                         sizeof((pm_dst)),           \
-                        __FILE__,                   \
+                        __FILENAME__,                   \
                         __LINE__);                  \
                                                     \
         pm_dst;                                     \
@@ -72,7 +74,7 @@ extern unsigned int pmfs_tracemask;
                         PM_WRT_MARKER,              \
                         &(pm_dst),                  \
                         sizeof((pm_dst)),           \
-                        __FILE__,                   \
+                        __FILENAME__,                   \
                         __LINE__);                  \
             pm_dst = y;                             \
     })
@@ -83,7 +85,7 @@ extern unsigned int pmfs_tracemask;
                         PM_WRT_MARKER,              \
                         &(pm_dst),                  \
                         sizeof((pm_dst)),           \
-                        __FILE__,                   \
+                        __FILENAME__,                   \
                         __LINE__);                  \
             pm_dst |= y;                            \
     })
@@ -94,7 +96,7 @@ extern unsigned int pmfs_tracemask;
                         PM_WRT_MARKER,              \
                         &(pm_dst),                  \
                         sizeof((pm_dst)),           \
-                        __FILE__,                   \
+                        __FILENAME__,                   \
                         __LINE__);                  \
             pm_dst &= y;                            \
     })
@@ -105,7 +107,7 @@ extern unsigned int pmfs_tracemask;
                         PM_WRT_MARKER,              \
                         &(pm_dst),                  \
                         sizeof((pm_dst)),           \
-                        __FILE__,                   \
+                        __FILENAME__,                   \
                         __LINE__);                  \
             pm_dst += y;                            \
     })
@@ -116,7 +118,7 @@ extern unsigned int pmfs_tracemask;
                         PM_WRT_MARKER,              \
                         &(pm_dst),                  \
                         sizeof((pm_dst)),           \
-                        __FILE__,                   \
+                        __FILENAME__,                   \
                         __LINE__);                  \
             pm_dst -= y;                            \
     })
@@ -128,7 +130,7 @@ extern unsigned int pmfs_tracemask;
                         PM_WRT_MARKER,              \
                         (pm_dst),                   \
                         (unsigned long)sz,          \
-                        __FILE__,                   \
+                        __FILENAME__,                   \
                         __LINE__);                  \
             memset(pm_dst, val, sz);                \
     }) 
@@ -139,7 +141,7 @@ extern unsigned int pmfs_tracemask;
                         PM_WRT_MARKER,              \
                         (pm_dst),                   \
                         (unsigned long)sz,          \
-                        __FILE__,                   \
+                        __FILENAME__,                   \
                         __LINE__);                  \
             memcpy(pm_dst, src, sz);                \
     })              
@@ -151,7 +153,7 @@ extern unsigned int pmfs_tracemask;
                         (pm_dst),                   \
                         min((int)PMFS_NAME_LEN,     \
                             (int)strlen((src))),    \
-                        __FILE__,                   \
+                        __FILENAME__,                   \
                         __LINE__);                  \
             strcpy(pm_dst, src);                    \
     })
@@ -163,7 +165,7 @@ extern unsigned int pmfs_tracemask;
                         (pm_dst),                   \
                         (unsigned long)copied,      \
                         (unsigned long)count,       \
-                        __FILE__,                   \
+                        __FILENAME__,                   \
                         __LINE__                    \
                     );                              \
             0;                                      \
@@ -177,7 +179,7 @@ extern unsigned int pmfs_tracemask;
                         PM_RD_MARKER,               \
                         &(pm_src),                  \
                         sizeof((pm_src)),           \
-                        __FILE__,                   \
+                        __FILENAME__,                   \
                         __LINE__);                  \
             (pm_src);                               \
     })     
@@ -189,7 +191,7 @@ extern unsigned int pmfs_tracemask;
                         PM_RD_MARKER,               \
                         &(pm_src),                  \
                         sizeof((pm_src)),           \
-                        __FILE__,                   \
+                        __FILENAME__,                   \
                         __LINE__);                  \
             &(pm_src);                              \
     })    
@@ -201,13 +203,13 @@ extern unsigned int pmfs_tracemask;
                         PM_RD_MARKER,               \
                         &(pm_src),                  \
                         sizeof((pm_src)),           \
-                        __FILE__,                   \
+                        __FILENAME__,                   \
                         __LINE__);                  \
         PM_TRACE("%s:%p:%lu:%s:%d\n",               \
                         PM_WRT_MARKER,              \
                         &(pm_src),                  \
                         sizeof((pm_src)),           \
-                        __FILE__,                   \
+                        __FILENAME__,                   \
                         __LINE__);                  \
         &(pm_src);                                  \
     })    
@@ -219,7 +221,7 @@ extern unsigned int pmfs_tracemask;
                         PM_RD_MARKER,               \
                         (pm_dst),                   \
                         (unsigned long)sz,          \
-                        __FILE__,                   \
+                        __FILENAME__,                   \
                         __LINE__);                  \
             memcmp(pm_dst, src, sz);                \
     })
@@ -232,7 +234,7 @@ extern unsigned int pmfs_tracemask;
     ({                                              \
         PM_TRACE("%s:%s:%d\n",                      \
                 PM_TX_START,                        \
-                __FILE__,                           \
+                __FILENAME__,                           \
                 __LINE__);                          \
     })
 
@@ -240,7 +242,7 @@ extern unsigned int pmfs_tracemask;
     ({                                              \
         PM_TRACE("%s:%s:%d\n",                      \
                 PM_TX_END,                          \
-                __FILE__,                           \
+                __FILENAME__,                           \
                 __LINE__);                          \
     })
 
@@ -255,24 +257,24 @@ extern unsigned int pmfs_tracemask;
                     (pm_dst),                       \
                     done,                           \
                     count,                          \
-                    __FILE__,                       \
+                    __FILENAME__,                       \
                     __LINE__                        \
                 );                                  \
     })
 #define PM_COMMIT()                                 \
     ({                                              \
         PM_TRACE("%s:%s:%d\n", PM_COMMIT_MARKER,    \
-                    __FILE__, __LINE__);            \
+                    __FILENAME__, __LINE__);            \
     })
 #define PM_BARRIER()                                \
     ({                                              \
         PM_TRACE("%s:%s:%d\n", PM_BARRIER_MARKER,   \
-                    __FILE__, __LINE__);            \
+                    __FILENAME__, __LINE__);            \
     })
 #define PM_FENCE()                                  \
     ({                                              \
         PM_TRACE("%s:%s:%d\n", PM_FENCE_MARKER,     \
-                    __FILE__, __LINE__);            \
+                    __FILENAME__, __LINE__);            \
     })
 
 #endif /* PM_INSTR_H */

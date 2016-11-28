@@ -158,13 +158,17 @@ static inline size_t memcpy_to_nvmm(char *kmem, loff_t offset,
 	const char __user *buf, size_t bytes)
 {
 	size_t copied;
+	void *dst = kmem + offset;
 
 	if (support_clwb) {
 		copied = bytes - __copy_from_user(kmem + offset, buf, bytes);
 		pmfs_flush_buffer(kmem + offset, copied, 0);
+		/* We don't have CLWB on Skylake */
 	} else {
 		copied = bytes - __copy_from_user_inatomic_nocache(kmem +
 						offset, buf, bytes);
+		PM_MOVNTI(dst, bytes, copied);
+		PM_FENCE();
 	}
 
 	return copied;
