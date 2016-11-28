@@ -36,6 +36,7 @@
 
 int measure_timing = 0;
 int support_clwb = 0;
+int support_clflushopt = 0;
 int support_pcommit = 0;
 
 module_param(measure_timing, int, S_IRUGO);
@@ -614,6 +615,14 @@ static int pmfs_fill_super(struct super_block *sb, void *data, int silent)
 	} else {
 		pmfs_info("arch does not have CLWB support\n");
 	}
+
+	if (arch_has_clflushopt()) {
+		pmfs_info("arch has CLFLUSHOPT support\n");
+		support_clflushopt = 1;
+	} else {
+		pmfs_info("arch does not have CLFLUSHOPT support\n");
+	}
+
 
 	sbi = kzalloc(sizeof(struct pmfs_sb_info), GFP_KERNEL);
 	if (!sbi)

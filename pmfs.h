@@ -134,6 +134,7 @@ extern u64 Countstats[TIMING_NUM];
 
 extern int measure_timing;
 extern int support_clwb;
+extern int support_clflushopt;
 
 extern atomic64_t fsync_pages;
 

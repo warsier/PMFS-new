@@ -227,8 +227,14 @@ static inline bool arch_has_clwb(void)
 	return static_cpu_has(X86_FEATURE_CLWB);
 }
 
+static inline bool arch_has_clflushopt(void)
+{
+	return static_cpu_has(X86_FEATURE_CLFLUSHOPT);
+}
+
 extern int support_clwb;
 extern int support_pcommit;
+extern int support_clflushopt;
 
 #define _mm_clflush(addr)\
 	asm volatile("clflush %0" : "+m" (*(volatile char *)(addr)))
@@ -260,10 +266,13 @@ static inline void pmfs_flush_buffer(void *buf, uint32_t len, bool fence)
 	if (support_clwb) {
 		for (i = 0; i < len; i += CACHELINE_SIZE)
 			_mm_clwb(buf + i);
-	} else {
+	} else if (support_clflushopt) {
 		for (i = 0; i < len; i += CACHELINE_SIZE)
 			_mm_clflushopt(buf + i);
 		PM_FLUSHOPT(buf, len, i*CACHELINE_SIZE);
+	} else {
+		for (i = 0; i < len; i += CACHELINE_SIZE)
+			_mm_clflush(buf + i);
 	}
 	/* Do a fence only if asked. We often don't need to do a fence
 	 * immediately after clflush because even if we get context switched

@@ -131,7 +131,7 @@ setversion_out:
 	}
 	case FS_PMFS_FSYNC: {
 		struct sync_range packet;
-		copy_from_user(&packet, (void *)arg, sizeof(struct sync_range));
+		ret = copy_from_user(&packet, (void *)arg, sizeof(struct sync_range));
 		pmfs_fsync(filp, packet.offset, packet.offset + packet.length, 1);
 		return 0;
 	}
