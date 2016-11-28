@@ -233,7 +233,7 @@ extern int support_pcommit;
 #define _mm_clflush(addr)\
 	asm volatile("clflush %0" : "+m" (*(volatile char *)(addr)))
 #define _mm_clflushopt(addr)\
-	asm volatile(".byte 0x66; clflush %0" : "+m" (*(volatile char *)(addr)))
+	asm volatile(".byte 0x66; clflushopt %0" : "+m" (*(volatile char *)(addr)))
 #define _mm_clwb(addr)\
 	asm volatile(".byte 0x66; xsaveopt %0" : "+m" (*(volatile char *)(addr)))
 #define _mm_pcommit()\
@@ -247,7 +247,7 @@ static inline void PERSISTENT_MARK(void)
 
 static inline void PERSISTENT_BARRIER(void)
 {
-	asm volatile ("sfence\n" : : );
+	asm volatile ("sfence\n" : : ); PM_FENCE();
 	if (support_pcommit) {
 		/* Do nothing */
 	}
@@ -262,7 +262,8 @@ static inline void pmfs_flush_buffer(void *buf, uint32_t len, bool fence)
 			_mm_clwb(buf + i);
 	} else {
 		for (i = 0; i < len; i += CACHELINE_SIZE)
-			_mm_clflush(buf + i);
+			_mm_clflushopt(buf + i);
+		PM_FLUSHOPT(buf, len, i*CACHELINE_SIZE);
 	}
 	/* Do a fence only if asked. We often don't need to do a fence
 	 * immediately after clflush because even if we get context switched

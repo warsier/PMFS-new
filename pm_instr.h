@@ -36,6 +36,7 @@ extern unsigned int pmfs_tracemask;
 
 /* PM flush */
 #define PM_FLUSH_MARKER                 "PM_L"
+#define PM_FLUSHOPT_MARKER              "PM_O"
 
 /* PM Delimiters */
 #define PM_TX_START                     "PM_XS"
@@ -257,14 +258,26 @@ extern unsigned int pmfs_tracemask;
                     (pm_dst),                       \
                     done,                           \
                     count,                          \
-                    __FILENAME__,                       \
+                    __FILENAME__,                   \
                     __LINE__                        \
                 );                                  \
     })
+#define PM_FLUSHOPT(pm_dst, count, done)            \
+    ({                                              \
+        PM_TRACE("%s:%p:%u:%u:%s:%d\n",             \
+                    PM_FLUSHOPT_MARKER,             \
+                    (pm_dst),                       \
+                    done,                           \
+                    count,                          \
+                    __FILENAME__,                   \
+                    __LINE__                        \
+                );                                  \
+    })
+
 #define PM_COMMIT()                                 \
     ({                                              \
         PM_TRACE("%s:%s:%d\n", PM_COMMIT_MARKER,    \
-                    __FILENAME__, __LINE__);            \
+                    __FILENAME__, __LINE__);        \
     })
 #define PM_BARRIER()                                \
     ({                                              \
