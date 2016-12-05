@@ -158,7 +158,9 @@ static inline size_t memcpy_to_nvmm(char *kmem, loff_t offset,
 	const char __user *buf, size_t bytes)
 {
 	size_t copied;
-	void *dst = kmem + offset;
+	#ifdef __TRACE__
+		void *dst = kmem + offset;
+	#endif
 
 	if (support_clwb) {
 		copied = bytes - __copy_from_user(kmem + offset, buf, bytes);

@@ -1266,7 +1266,7 @@ void pmfs_dirty_inode(struct inode *inode, int flags)
 	/* only i_atime should have changed if at all.
 	 * we can do in-place atomic update */
 	pmfs_memunlock_inode(sb, pi);
-	pi->i_atime = cpu_to_le32(inode->i_atime.tv_sec);
+	PM_EQU(pi->i_atime, cpu_to_le32(inode->i_atime.tv_sec)); /* persistent */
 	pmfs_memlock_inode(sb, pi);
 	pmfs_flush_buffer(&pi->i_atime, sizeof(pi->i_atime), true);
 
