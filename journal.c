@@ -531,7 +531,7 @@ pmfs_transaction_t *pmfs_new_transaction(struct super_block *sb,
 		return ERR_PTR(-ENOMEM);
 	memset(trans, 0, sizeof(*trans));
 
-	trans->num_used = 0;
+	trans->num_used = 0; /* These could be persistent ? */
 	trans->num_entries = max_log_entries;
 	trans->t_journal = journal;
 	req_size = max_log_entries << LESIZE_SHIFT;
@@ -593,7 +593,7 @@ again:
 	pmfs_dbg_trans("new transaction tid %d nle %d avl sz %x sa %llx\n",
 		trans->transaction_id, max_log_entries, avail_size, base);
 	trans->start_addr = pmfs_get_block(sb, base);
-
+	PM_TX_BEGIN(); /* move this up */
 	trans->parent = (pmfs_transaction_t *)current->journal_info;
 	current->journal_info = trans;
 	PMFS_END_TIMING(new_trans_t, log_time);
@@ -740,6 +740,7 @@ int pmfs_commit_transaction(struct super_block *sb,
 
 	current->journal_info = trans->parent;
 	pmfs_free_transaction(trans);
+	PM_TX_COMMIT();
 	PMFS_END_TIMING(commit_trans_t, commit_time);
 	return 0;
 }

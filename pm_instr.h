@@ -250,7 +250,7 @@ extern unsigned int pmfs_tracemask;
 #define start_epoch()       ({;})
 #define end_epoch()         ({;})
 
-#define start_txn()                                 \
+#define PM_TX_BEGIN()                               \
     ({                                              \
         PM_TRACE("%s:%s:%d\n",                      \
                 PM_TX_START,                        \
@@ -258,7 +258,7 @@ extern unsigned int pmfs_tracemask;
                 __LINE__);                          \
     })
 
-#define end_txn()                                   \
+#define PM_TX_COMMIT()                              \
     ({                                              \
         PM_TRACE("%s:%s:%d\n",                      \
                 PM_TX_END,                          \

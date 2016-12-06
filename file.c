@@ -322,11 +322,14 @@ const struct file_operations pmfs_xip_file_operations = {
 	.llseek			= pmfs_llseek,
 	.read			= pmfs_xip_file_read,
 	.write			= pmfs_xip_file_write,
+//	Pre 4.x.x era
 //	.aio_read		= xip_file_aio_read,
 //	.aio_write		= xip_file_aio_write,
+//	For 4.x and above but troubles NFS or anyone who uses thes *iter fn
 //	.read_iter		= generic_file_read_iter,
 //	.write_iter		= generic_file_write_iter,
 	.mmap			= pmfs_xip_file_mmap,
+// 	Can we avoid VFS if we don't call into generic_* routines ?
 	.open			= generic_file_open,
 	.fsync			= pmfs_fsync,
 	.flush			= pmfs_flush,
