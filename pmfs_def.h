@@ -253,7 +253,8 @@ static inline void PERSISTENT_MARK(void)
 
 static inline void PERSISTENT_BARRIER(void)
 {
-	asm volatile ("sfence\n" : : ); PM_FENCE();
+	asm volatile ("sfence\n" : : ); 
+	PM_FENCE();
 	if (support_pcommit) {
 		/* Do nothing */
 	}
@@ -269,7 +270,7 @@ static inline void pmfs_flush_buffer(void *buf, uint32_t len, bool fence)
 	} else if (support_clflushopt) {
 		for (i = 0; i < len; i += CACHELINE_SIZE)
 			_mm_clflushopt(buf + i);
-		PM_FLUSHOPT(buf, len, i*CACHELINE_SIZE);
+		PM_FLUSHOPT(buf, len, i);
 	} else {
 		for (i = 0; i < len; i += CACHELINE_SIZE)
 			_mm_clflush(buf + i);

@@ -522,6 +522,7 @@ pmfs_transaction_t *pmfs_new_transaction(struct super_block *sb,
 #endif
 	/* If it is an undo log, need one more log-entry for commit record */
 	PMFS_START_TIMING(new_trans_t, log_time);
+	PM_TX_BEGIN();
 
 	if (!sbi->redo_log)
 		max_log_entries++;
@@ -531,15 +532,15 @@ pmfs_transaction_t *pmfs_new_transaction(struct super_block *sb,
 		return ERR_PTR(-ENOMEM);
 	memset(trans, 0, sizeof(*trans));
 
-	trans->num_used = 0; /* These could be persistent ? */
+	trans->num_used = 0; /* Not persistent, returned by kmem_cache_alloc */
 	trans->num_entries = max_log_entries;
 	trans->t_journal = journal;
 	req_size = max_log_entries << LESIZE_SHIFT;
 
 	mutex_lock(&sbi->journal_mutex);
 
-	tail = le32_to_cpu(journal->tail);
-	head = le32_to_cpu(journal->head);
+	tail = le32_to_cpu(journal->tail); /* persistent read */
+	head = le32_to_cpu(journal->head); /* persistent read */
 	trans->transaction_id = sbi->next_transaction_id++;
 again:
 	trans->gen_id = le16_to_cpu(journal->gen_id);
@@ -593,7 +594,6 @@ again:
 	pmfs_dbg_trans("new transaction tid %d nle %d avl sz %x sa %llx\n",
 		trans->transaction_id, max_log_entries, avail_size, base);
 	trans->start_addr = pmfs_get_block(sb, base);
-	PM_TX_BEGIN(); /* move this up */
 	trans->parent = (pmfs_transaction_t *)current->journal_info;
 	current->journal_info = trans;
 	PMFS_END_TIMING(new_trans_t, log_time);
@@ -608,6 +608,7 @@ journal_full:
 		avail_size, freed_size, req_size);
 	pmfs_free_transaction(trans);
 	PMFS_END_TIMING(new_trans_t, log_time);
+	PM_TX_COMMIT();
 	return ERR_PTR(-EAGAIN);
 }
 
