@@ -245,7 +245,7 @@ int pmfs_fsync(struct file *file, loff_t start, loff_t end, int datasync)
 	} while (start < end);
 persist:
 	PERSISTENT_MARK();
-	PERSISTENT_BARRIER();
+	// PERSISTENT_BARRIER(); /* not required, usercode is responsible */
 	PMFS_END_TIMING(fsync_t, fsync_time);
 	return 0;
 }
@@ -323,6 +323,8 @@ const struct file_operations pmfs_xip_file_operations = {
 	.read			= pmfs_xip_file_read,
 	.write			= pmfs_xip_file_write,
 //	Pre 4.x.x era
+//	Either implement these or let user-apps know
+//	that this is unimplemented. For eg., MySQL needs aio.
 //	.aio_read		= xip_file_aio_read,
 //	.aio_write		= xip_file_aio_write,
 //	For 4.x and above but troubles NFS or anyone who uses thes *iter fn
