@@ -34,6 +34,7 @@ extern unsigned int pmfs_tracemask;
 
 /* Cacheable PM write */
 #define PM_WRT_MARKER                   "PM_W"
+#define PM_DI_MARKER	                "PM_DI"
 
 /* Cacheable PM read */
 #define PM_RD_MARKER                    "PM_R"
@@ -190,6 +191,20 @@ extern unsigned int pmfs_tracemask;
                     );                              \
             0;                                      \
     })
+
+#define PM_MOVNTI_DI(pm_dst, count, copied)         \
+    ({                                              \
+            PM_TRACE("%s:%p:%lu:%lu:%s:%d\n",       \
+                        PM_DI_MARKER,               \
+                        (pm_dst),                   \
+                        (unsigned long)copied,      \
+                        (unsigned long)count,       \
+                        __FILENAME__,               \
+                        __LINE__                    \
+                    );                              \
+            0;                                      \
+    })
+
 
 /* PM Read macros */
 /* Return the data    of persistent variable */

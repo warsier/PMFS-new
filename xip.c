@@ -172,8 +172,8 @@ static inline size_t memcpy_to_nvmm(char *kmem, loff_t offset,
 	} else {
 		copied = bytes - __copy_from_user_inatomic_nocache(kmem +
 						offset, buf, bytes);
-		PM_MOVNTI(dst, bytes, copied); /* This macro does not perform movnti, only records */
-		PM_FENCE();		       /* This macro does not perform fence,  only records */
+		PM_MOVNTI_DI(dst, bytes, copied); /* This macro does not perform movnti, only records */
+		PM_FENCE();		          /* This macro does not perform fence,  only records */
 	}
 
 	return copied;

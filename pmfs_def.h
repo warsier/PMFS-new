@@ -270,7 +270,7 @@ static inline void pmfs_flush_buffer(void *buf, uint32_t len, bool fence)
 	} else if (support_clflushopt) {
 		for (i = 0; i < len; i += CACHELINE_SIZE)
 			_mm_clflushopt(buf + i);
-		PM_FLUSHOPT(buf, len, i);
+		// PM_FLUSHOPT(buf, len, i);
 	} else {
 		for (i = 0; i < len; i += CACHELINE_SIZE)
 			_mm_clflush(buf + i);
