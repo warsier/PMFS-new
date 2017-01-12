@@ -32,12 +32,14 @@
 #include <linux/cred.h>
 #include <linux/backing-dev.h>
 #include <linux/list.h>
+#include <linux/types.h>
 #include "pmfs.h"
 
 int measure_timing = 0;
 int support_clwb = 0;
 int support_clflushopt = 0;
 int support_pcommit = 0;
+atomic64_t tot_epoch_count = ATOMIC_INIT(0);
 
 module_param(measure_timing, int, S_IRUGO);
 MODULE_PARM_DESC(measure_timing, "Timing measurement");
@@ -1124,6 +1126,8 @@ out1:
 
 static void __exit exit_pmfs_fs(void)
 {
+	printk(KERN_INFO "Total epochs : %ld\n",
+		tot_epoch_count.counter);	
 	unregister_filesystem(&pmfs_fs_type);
 	destroy_inodecache();
 	destroy_blocknode_cache();

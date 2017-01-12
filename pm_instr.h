@@ -15,6 +15,9 @@
 #ifndef PM_INSTR_H
 #define PM_INSTR_H
 
+#include <linux/types.h>
+extern atomic64_t tot_epoch_count;
+
 #define __FILENAME__ 			\
 	(strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 extern unsigned int pmfs_tracemask;
@@ -24,7 +27,7 @@ extern unsigned int pmfs_tracemask;
             trace_printk(args);         \
     }
 
-#define pmfs_no_trace(args ...)		{;}
+#define pmfs_no_trace(args ...)	{;}
 
 #ifdef __TRACE__
 #define PM_TRACE                        pmfs_trace_printk
@@ -318,10 +321,22 @@ extern unsigned int pmfs_tracemask;
         PM_TRACE("%s:%s:%d\n", PM_BARRIER_MARKER,   \
                     __FILENAME__, __LINE__);        \
     })
+
+/*
+ * We know that PMFS is careful in
+ * issuing fences and only issues one
+ * after a write to PM. Hence, there
+ * are no null-epochs or stray fences.
+ * Therefore, we don't need a per-thread
+ * write counter, but a global fence counter
+ * is a sufficient indicator of the number
+ * of epochs in workload execution.
+ */
 #define PM_FENCE()                                  \
     ({                                              \
         PM_TRACE("%s:%s:%d\n", PM_FENCE_MARKER,     \
                     __FILENAME__, __LINE__);        \
+	atomic64_add(1, &tot_epoch_count);          \
     })
 
 #endif /* PM_INSTR_H */
