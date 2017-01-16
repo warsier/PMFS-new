@@ -1127,7 +1127,7 @@ out1:
 static void __exit exit_pmfs_fs(void)
 {
 	printk(KERN_INFO "Total epochs : %ld\n",
-		tot_epoch_count.counter);	
+		atomic64_read(&tot_epoch_count));	
 	unregister_filesystem(&pmfs_fs_type);
 	destroy_inodecache();
 	destroy_blocknode_cache();

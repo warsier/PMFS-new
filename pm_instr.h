@@ -336,7 +336,7 @@ extern unsigned int pmfs_tracemask;
     ({                                              \
         PM_TRACE("%s:%s:%d\n", PM_FENCE_MARKER,     \
                     __FILENAME__, __LINE__);        \
-	atomic64_add(1, &tot_epoch_count);          \
+	atomic64_inc(&tot_epoch_count);             \
     })
 
 #endif /* PM_INSTR_H */

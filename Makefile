@@ -12,7 +12,8 @@
 # echo function > current_tracer	# enables trace_printks
 # echo 1 > tracing_on
 # cat trace_pipe
-# mount -t pmfs -o init,tracemask=1 /dev/pmem0 /mnt/pmfs
+# mount -t pmfs -o init,tracemask=1,jsize=1G /dev/pmem0 /mnt/pmfs
+# # Increase journal size so that we don't run into trouble later
 # Happy tracing !
 #
 # TO UNMOUNT :
