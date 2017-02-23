@@ -84,9 +84,9 @@ of memory to act as PM. Eg., to reserve 4G of memory starting at 2GB mark
    Update grub using "grub2-mkconfig -o <location of grub.cfg>"
 
 *  Refer here for more details on how to expose PM:
-~~~
+
 	https://nvdimm.wiki.kernel.org/
-~~~
+
 *  Reboot. On success, you should see PM as a device named /dev/pmem0.
 
 ## To compile and run PMFS as LKM in Linux 4.3
