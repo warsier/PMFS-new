@@ -192,10 +192,11 @@ that a file has been created in PMFS on the server.
    or simply do the following.
 
 	In the exim configuration file exim-4.86/Local/Makefile
+	~~~
 	change BIN_DIRECTORY
 	change CONFIGURE_FILE
 	change EXIM_USER
-	
+	~~~
 In your system, create folders /mnt/pmfs/exim, /mnt/pmfs/exim/spool and
 /mnt/pmfs/exim/spool/mail May need to change permissions on these folders so that
 exim can store e-mails here.
