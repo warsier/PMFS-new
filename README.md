@@ -56,9 +56,9 @@ There are two scripts provided in the source code, `setup-pmfs.sh` and `remount-
 # WHISPER
 
 WHISPER provides PMFS as a Linux Kernel Module (LKM) for v4.3 only.
-~~~
-PMFS : https://github.com/snalli/PMFS-new
-~~~
+
+PMFS-new : https://github.com/snalli/PMFS-new
+
 
 ## To enable PM support in Linux:
 
@@ -237,7 +237,7 @@ This will install exim in the BIN_DIRECTORY
 	$ cd <your mysql dir>
 	$ cp pmfs_mysql.conf support-files/
 ~~~
-Change base dir in the conf file to <your mysql dir>
+Change base dir in the conf file to (your mysql dir)
 
 Next,
 ~~~
