@@ -62,7 +62,7 @@ PMFS : https://github.com/snalli/PMFS-new
 
 ## To enable PM support in Linux:
 
-1. Download linux-4.3 from kernel.org.
+*  Download linux-4.3 from kernel.org.
    Use "make menuconfig" to edit kernel config.
    In the kernel config file:
 ~~~
@@ -75,7 +75,7 @@ PMFS : https://github.com/snalli/PMFS-new
 ~~~
    Compile and install the kernel.
 
-2. Edit /etc/default/grub or an equivalent file that generates grub menu
+*  Edit /etc/default/grub or an equivalent file that generates grub menu
 in your system. Use the memmap kernel boot parameter to reserve a region
 of memory to act as PM. Eg., to reserve 4G of memory starting at 2GB mark
 ~~~
@@ -83,20 +83,20 @@ of memory to act as PM. Eg., to reserve 4G of memory starting at 2GB mark
 ~~~
    Update grub using "grub2-mkconfig -o <location of grub.cfg>"
 
-3. Refer here for more details on how to expose PM:
+*  Refer here for more details on how to expose PM:
 ~~~
 	https://nvdimm.wiki.kernel.org/
 ~~~
-4. Reboot. On success, you should see PM as a device named /dev/pmem0.
+*  Reboot. On success, you should see PM as a device named /dev/pmem0.
 
 ## To compile and run PMFS as LKM in Linux 4.3
 
-1. Install kernel headers for development. Use appropriate package manager for 
+*  Install kernel headers for development. Use appropriate package manager for 
    your system. For Aptitude manager, use the following command:
 ~~~
 	apt-get install linux-headers-4.3
 ~~~
-2. Get PMFS source code and change to PMFS source directory.
+*  Get PMFS source code and change to PMFS source directory.
 ~~~
 	$ git clone https://github.com/snalli/PMFS-new.git
 	# cd PMFS-new
@@ -106,7 +106,7 @@ To compile tracing framework for PM accesses:
 ~~~
 	$ make CPPFLAGS="-D__TRACE__"
 ~~~
-3. To run:
+*  To run:
 ~~~	
 	# mkdir /mnt/pmfs
 	$ insmod pmfs.ko measure_timing=0
@@ -115,11 +115,11 @@ To compile tracing framework for PM accesses:
 To enable tracing, set tracemask to 1. You may vary journal size using jsize 
 as per your requirements.
 
-4. On success, you should see PMFS mounted at /mnt/pmfs.
+*  On success, you should see PMFS mounted at /mnt/pmfs.
 ~~~
 	$ mount | grep pmfs
 ~~~
-5. For more details, use the Makefile or README.
+*  For more details, use the Makefile or README.
 
 ## WHISPER Workloads
 
@@ -128,7 +128,7 @@ and Database server (MySQL) that are partially or entirely in PMFS/workloads/ fo
 
 ## To compile and run NFS in Linux:
 
-1. In the kernel config file:
+*  In the kernel config file:
 ~~~
 	CONFIG_NFS_FS=y
 	CONFIG_NFS_V3=y
@@ -140,7 +140,7 @@ may enable more parameters as per your requirement.  For more details, refer to
 fs/Kconfig, fs/nfs/Kconfig, fs/nfsd/Kconfig in the Linux kernel source tree.
 Compile, re-install and reboot.
 
-2. Mount PMFS and inform NFS using /var/lib/nfs/etab file. 
+*  Mount PMFS and inform NFS using /var/lib/nfs/etab file. 
    In etab:
 ~~~
 	/mnt/pmfs	localhost.localdomain(rw,sync,wdelay,nohide,nocrossmnt,secure,	\
@@ -153,20 +153,20 @@ Compile, re-install and reboot.
 	$ exportfs -a
 	$ exportfs 	[To check exported mountpoints]
 ~~~
-3. Start NFS server:
+* Start NFS server:
 ~~~	
 	$ service nfs start
 	$ rpc.nfsd 8	[This starts 8 server threads. May change as per needs]
 	$ service nfslock start
 	$ pgrep nfs	[To verify]
 ~~~
-4. The client should be started after the server. 
+*  The client should be started after the server. 
    Start NFS client:
 ~~~	
 	$ mount.nfs -s localhost:/mnt/pmfs /mnt/nfs -wn -o retrans=3,soft,noac,		\
 				lookupcache=none,rsize=4096,wsize=4096,proto=udp,timeo=7
 ~~~
-5. On success, you should see NFS mounted on the client side.
+*  On success, you should see NFS mounted on the client side.
 ~~~	
 	$ mount | grep nfs
 ~~~
@@ -177,18 +177,18 @@ that a file has been created in PMFS on the server.
 	$ strace touch /mnt/nfs/foo		[Create at the client. May wait.]
 	$ ls /mnt/pmfs				[Verify at the server]
 ~~~
-6. Pre-create the fileset for filebench on the NFS server side using fileserver-asplos.f in workloads/filsrv.
+*  Pre-create the fileset for filebench on the NFS server side using fileserver-asplos.f in workloads/filsrv.
 ~~~
 	$ ./filebench -f fileserver-asplos.f	[Pre-create at the server]
 ~~~
-7. Launch filebench on the NFS client side using nfs-asplos.f in workloads/filsrv.
+*  Launch filebench on the NFS client side using nfs-asplos.f in workloads/filsrv.
 ~~~
 	$ ./filebench -f nfs-asplos.f		[Access at the client]
 ~~~
 
 ## To compile and run Exim mailserver:
 
-1. Get exim-4.86 from workloads/mailsrv. Use the README for compilation
+*  Get exim-4.86 from workloads/mailsrv. Use the README for compilation
    or simply do the following.
 
 	In the exim configuration file exim-4.86/Local/Makefile
@@ -200,7 +200,7 @@ In your system, create folders /mnt/pmfs/exim, /mnt/pmfs/exim/spool and
 /mnt/pmfs/exim/spool/mail May need to change permissions on these folders so that
 exim can store e-mails here.
 
-***This creates a mail directory in PM under /mnt/pmfs/exim/spool/mail/***
+### This creates a mail directory in PM under /mnt/pmfs/exim/spool/mail/***
 
 Next,
 ~~~
@@ -209,29 +209,29 @@ Next,
 ~~~
 This will install exim in the BIN_DIRECTORY
 
-2. Create user accounts for exim users using "useradd" and user-list-filename in mailsrv/,
+*  Create user accounts for exim users using "useradd" and user-list-filename in mailsrv/,
    only as a guide. Ensure they all belong to the same group that has r/w permissions
    to the spool and mail folders created in Step 1.
 
-3. To run exim
+*  To run exim
 ~~~
 	$ ./exim -bd &
 	$ pgrep exim	[Verify]
 ~~~
-4. To install and run postal for 2 minutes, 
+*  To install and run postal for 2 minutes, 
 ~~~
 	$ apt-get install postal
 	$ postal -h
 	$ timeout 2m postal -m 100 -M 100 -t 8 -c 2 -r 1000 localhost user-list-filename  
 ~~~
-5. On success, you should files with each user's name created in step 2 and some 
+*  On success, you should files with each user's name created in step 2 and some 
    emails in them.
 
 ## To install and run MySQL:
 
-1. Get MySQL 5.7.6 from https://www.mysql.com/.
-2. Follow its instructions to compile.
-3. To initialize DB server:
+*  Get MySQL 5.7.6 from https://www.mysql.com/.
+*  Follow its instructions to compile.
+*  To initialize DB server:
 ~~~	
 	$ cp PMFS-new/workloads/mysql/* <your mysql dir>
 	$ cd <your mysql dir>
@@ -243,17 +243,17 @@ Next,
 ~~~
 	$ ./mysql_init.sh
 ~~~
-***This creates a database in PM under /mnt/pmfs/mysql/***
+### This creates a database in PM under /mnt/pmfs/mysql/***
 
-4. To run DB server:
+*  To run DB server:
 ~~~
 	$ ./mysql_run.sh
 ~~~
-5. To initialize Sysbench, a workload for MySQL :
+*  To initialize Sysbench, a workload for MySQL :
 ~~~
 	$ ./sysbench_init.sh
 ~~~
-6. To run Sysbench workloads :
+*  To run Sysbench workloads :
 ~~~
 	$ ./sysbench_simple.sh
 	$ ./sysbench_complex.sh
