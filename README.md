@@ -99,7 +99,7 @@ of memory to act as PM. Eg., to reserve 4G of memory starting at 2GB mark
 *  Get PMFS source code and change to PMFS source directory.
 ~~~
 	$ git clone https://github.com/snalli/PMFS-new.git
-	# cd PMFS-new
+	$ cd PMFS-new
 	$ make 
 ~~~
 To compile tracing framework for PM accesses:
@@ -108,7 +108,7 @@ To compile tracing framework for PM accesses:
 ~~~
 *  To run:
 ~~~	
-	# mkdir /mnt/pmfs
+	$ mkdir /mnt/pmfs
 	$ insmod pmfs.ko measure_timing=0
 	$ mount -t pmfs -o init,tracemask=0,jsize=256M /dev/pmem0 /mnt/pmfs
 ~~~
