@@ -53,7 +53,7 @@ There are two scripts provided in the source code, `setup-pmfs.sh` and `remount-
 * PMFS requires the underlying block device to support DAX (Direct Access) feature.
 * This project cuts some features of the original PMFS, such as memory protection and huge mmap support. If you need these features, please turn to the original PMFS.
 
-# WHISPER Workloads
+# WHISPER
 
 WHISPER provides PMFS as a Linux Kernel Module (LKM) for v4.3 only.
 ~~~
@@ -200,7 +200,7 @@ In your system, create folders /mnt/pmfs/exim, /mnt/pmfs/exim/spool and
 /mnt/pmfs/exim/spool/mail May need to change permissions on these folders so that
 exim can store e-mails here.
 
-### This creates a mail directory in PM under /mnt/pmfs/exim/spool/mail/***
+### This creates a mail directory in PM under /mnt/pmfs/exim/spool/mail/
 
 Next,
 ~~~
@@ -243,7 +243,7 @@ Next,
 ~~~
 	$ ./mysql_init.sh
 ~~~
-### This creates a database in PM under /mnt/pmfs/mysql/***
+### This creates a database in PM under /mnt/pmfs/mysql/
 
 *  To run DB server:
 ~~~
