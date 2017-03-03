@@ -14,27 +14,27 @@ WHISPER provides PMFS as a Linux Kernel Module (LKM) for v4.3 only.
 * PMFS requires the underlying block device to support DAX (Direct Access) feature.
 * This project cuts some features of the original PMFS, such as memory protection and huge mmap support. If you need these features, please turn to the original PMFS.
 
-## First, enable PM support in Linux:
+## First, enable PM support in Linux.
 
 * Download linux-4.3 from kernel.org.
 * Use "make menuconfig" to edit kernel config.
 * In the kernel config file:
-~~~
+```
 	CONFIG_BLK_DEV_RAM_DAX=y
 	CONFIG_FS_DAX=y
 	CONFIG_X86_PMEM_LEGACY=y
 	CONFIG_LIBNVDIMM=y
 	CONFIG_BLK_DEV_PMEM=m
 	CONFIG_ARCH_HAS_PMEM_API=y
-~~~
+```
 * Compile and install the kernel.
 
 * Edit /etc/default/grub or an equivalent file that generates grub menu
   in your system. Use the memmap kernel boot parameter to reserve a region
   of memory to act as PM. Eg., to reserve 4G of memory starting at 2GB mark
-~~~
+```
 	memmap=4G!2G
-~~~
+```
 Update grub using "grub2-mkconfig -o your_grub.cfg"
 
 *  Refer here for more details on how to expose PM:
@@ -43,7 +43,7 @@ Update grub using "grub2-mkconfig -o your_grub.cfg"
 
 *  Reboot. On success, you should see PM as a device named /dev/pmem0.
 
-## To compile and run PMFS as LKM in Linux 4.3
+## To compile and run PMFS as LKM in Linux 4.3:
 
 *  Install kernel headers for development. Use appropriate package manager for 
    your system. For Aptitude manager, use the following command:
@@ -102,16 +102,16 @@ Compile, re-install and reboot.
 			no_root_squash,no_all_squash)
 ~~~
 * Then export it using:
-~~~
+```
 	$ exportfs -a
-	$ exportfs 	[To check exported mountpoints]
-~~~
+	$ exportfs 		[To check exported mountpoints]
+```
 * Start NFS server:
 ~~~	
 	$ service nfs start
-	$ rpc.nfsd 8	[This starts 8 server threads. May change as per needs]
+	$ rpc.nfsd 8		[This starts 8 server threads. May change as per needs]
 	$ service nfslock start
-	$ pgrep nfs	[To verify]
+	$ pgrep nfs		[To verify]
 ~~~
 *  The client should be started after the server. 
    Start NFS client:
