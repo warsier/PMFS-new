@@ -1,50 +1,11 @@
-# Porting PMFS to the latest Linux kernel
-
-## Introduction
+# PMFS
 
 PMFS is a file system for persistent memory, developed by Intel.
 For more details about PMFS, please check the git repository:
 
 https://github.com/linux-pmfs/pmfs
 
-This project ports PMFS to the latest Linux kernel so developers can compare PMFS to other file systems on the new kernel.
-
-## Building PMFS
-The master branch works on the 4.3 version of x86-64 Linux kernel.
-
-To build PMFS, simply run a
-
-~~~
-#make
-~~~
-
-command.
-
-## Running PMFS
-PMFS runs on a physically contiguous memory region that is not used by the Linux kernel, and relies on the kernel NVDIMM support.
-
-To run PMFS, first build up your kernel with NVDIMM support enabled (`CONFIG_BLK_DEV_PMEM`), and then you can
-reserve the memory space by booting the kernel with `memmap` command line option.
-
-For instance, adding `memmap=16G!8G` to the kernel boot parameters will reserve 16GB memory starting from 8GB address, and the kernel will create a `pmem0` block device under the `/dev` directory.
-
-After the OS has booted, you can initialize a PMFS instance with the following commands:
-
-
-~~~
-#insmod pmfs.ko
-#mount -t pmfs -o init /dev/pmem0 /mnt/ramdisk 
-~~~
-
-The above commands create a PMFS instance on pmem0 device, and mount on `/mnt/ramdisk`.
-
-To recover an existing PMFS instance, mount PMFS without the init option, for example:
-
-~~~
-#mount -t pmfs /dev/pmem0 /mnt/ramdisk 
-~~~
-
-There are two scripts provided in the source code, `setup-pmfs.sh` and `remount-pmfs.sh` to help setup PMFS.
+WHISPER provides PMFS as a Linux Kernel Module (LKM) for v4.3 only.
 
 ## Current limitations
 
@@ -53,18 +14,11 @@ There are two scripts provided in the source code, `setup-pmfs.sh` and `remount-
 * PMFS requires the underlying block device to support DAX (Direct Access) feature.
 * This project cuts some features of the original PMFS, such as memory protection and huge mmap support. If you need these features, please turn to the original PMFS.
 
-# WHISPER
+## First, enable PM support in Linux:
 
-WHISPER provides PMFS as a Linux Kernel Module (LKM) for v4.3 only.
-
-PMFS-new : https://github.com/snalli/PMFS-new
-
-
-## To enable PM support in Linux:
-
-*  Download linux-4.3 from kernel.org.
-   Use "make menuconfig" to edit kernel config.
-   In the kernel config file:
+* Download linux-4.3 from kernel.org.
+* Use "make menuconfig" to edit kernel config.
+* In the kernel config file:
 ~~~
 	CONFIG_BLK_DEV_RAM_DAX=y
 	CONFIG_FS_DAX=y
@@ -73,15 +27,15 @@ PMFS-new : https://github.com/snalli/PMFS-new
 	CONFIG_BLK_DEV_PMEM=m
 	CONFIG_ARCH_HAS_PMEM_API=y
 ~~~
-   Compile and install the kernel.
+* Compile and install the kernel.
 
-*  Edit /etc/default/grub or an equivalent file that generates grub menu
-in your system. Use the memmap kernel boot parameter to reserve a region
-of memory to act as PM. Eg., to reserve 4G of memory starting at 2GB mark
+* Edit /etc/default/grub or an equivalent file that generates grub menu
+  in your system. Use the memmap kernel boot parameter to reserve a region
+  of memory to act as PM. Eg., to reserve 4G of memory starting at 2GB mark
 ~~~
 	memmap=4G!2G
 ~~~
-   Update grub using "grub2-mkconfig -o <location of grub.cfg>"
+Update grub using "grub2-mkconfig -o your_grub.cfg"
 
 *  Refer here for more details on how to expose PM:
 
@@ -102,11 +56,11 @@ of memory to act as PM. Eg., to reserve 4G of memory starting at 2GB mark
 	$ cd PMFS-new
 	$ make 
 ~~~
-To compile tracing framework for PM accesses:
+## To compile tracing framework for PM accesses:
 ~~~
 	$ make CPPFLAGS="-D__TRACE__"
 ~~~
-*  To run:
+## To run:
 ~~~	
 	$ mkdir /mnt/pmfs
 	$ insmod pmfs.ko measure_timing=0
@@ -121,7 +75,7 @@ as per your requirements.
 ~~~
 *  For more details, use the Makefile or README.
 
-## WHISPER Workloads
+## PMFS Workloads
 
 WHISPER includes 3 filesystem workloads: Network File Server (NFS), Mail server (Exim)
 and Database server (MySQL) that are partially or entirely in PMFS/workloads/ folder.
@@ -140,15 +94,14 @@ may enable more parameters as per your requirement.  For more details, refer to
 fs/Kconfig, fs/nfs/Kconfig, fs/nfsd/Kconfig in the Linux kernel source tree.
 Compile, re-install and reboot.
 
-*  Mount PMFS and inform NFS using /var/lib/nfs/etab file. 
-   In etab:
+*  Mount PMFS and inform NFS using /etc/exports file. In exports, copy and paste:
 ~~~
 	/mnt/pmfs	localhost.localdomain(rw,sync,wdelay,nohide,nocrossmnt,secure,	\
 			no_root_squash,no_all_squash,no_subtree_check,secure_locks,acl,	\
 			no_pnfs,fsid=10,anonuid=65534,anongid=65534,sec=sys,rw,secure,	\
 			no_root_squash,no_all_squash)
 ~~~
-   Then export it using:
+* Then export it using:
 ~~~
 	$ exportfs -a
 	$ exportfs 	[To check exported mountpoints]
@@ -197,9 +150,9 @@ that a file has been created in PMFS on the server.
 	change CONFIGURE_FILE
 	change EXIM_USER
 	~~~
-In your system, create folders /mnt/pmfs/exim, /mnt/pmfs/exim/spool and
-/mnt/pmfs/exim/spool/mail May need to change permissions on these folders so that
-exim can store e-mails here.
+In your system, create folders /mnt/pmfs/exim, /mnt/pmfs/exim/spool and /mnt/pmfs/exim/spool/mail. 
+
+May need to change permissions on these folders so that exim can store e-mails here.
 
 ### This creates a mail directory in PM under /mnt/pmfs/exim/spool/mail/
 
@@ -228,17 +181,17 @@ This will install exim in the BIN_DIRECTORY
 *  On success, you should files with each user's name created in step 2 and some 
    emails in them.
 
-## To install and run MySQL:
+## To compile and run MySQL:
 
 *  Get MySQL 5.7.6 from https://www.mysql.com/.
 *  Follow its instructions to compile.
 *  To initialize DB server:
 ~~~	
-	$ cp PMFS-new/workloads/mysql/* <your mysql dir>
-	$ cd <your mysql dir>
+	$ cp PMFS-new/workloads/mysql/* your-mysql-dir
+	$ cd your-mysql-dir
 	$ cp pmfs_mysql.conf support-files/
 ~~~
-Change base dir in the conf file to (your mysql dir)
+Change base dir in the conf file to your-mysql-dir
 
 Next,
 ~~~
