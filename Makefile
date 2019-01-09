@@ -5,7 +5,7 @@
 # make CPPFLAGS="-D__TRACE__"
 #
 # TO RUN AND TRACE :
-# insmod pmfs.ko measure_timing=0 
+# insmod pmfs.ko measure_timing=0
 # cd /sys/kernel/debug/tracing
 # echo 0 > tracing_on
 # echo pmfs_mount > set_ftrace_filter	# we don't want all pmfs_functions
@@ -21,16 +21,27 @@
 # rmmod pmfs
 #
 # TO REMOUNT :
-# insmod pmfs.ko measure_timing=0 
+# insmod pmfs.ko measure_timing=0
 # mount -t pmfs -o tracemask=1 /dev/pmem0 /mnt/pmfs
-# 
+#
 
 KCPPFLAGS= ${CPPFLAGS}
 export KCPPFLAGS
 
+#### ADDED_BY_PMTEST ####
+#GCOV_PROFILE := y
+#ccflags-y += -fprofile-arcs -ftest-coverage -g
+#ldflags-y += --coverage
+#### END_ADDED_BY_PMTEST ####
+
 obj-m += pmfs.o
 
 pmfs-y := bbuild.o balloc.o dir.o file.o inode.o namei.o super.o symlink.o ioctl.o pmfs_stats.o journal.o xip.o wprotect.o
+
+#### ADDED_BY_PMTEST ####
+pmfs-y +=  ../../pmtest/src/kernel_module.o
+ccflags-y += -I$(src)/../../pmtest/include
+#### END_ADDED_BY_PMTEST ####
 
 all:
 	make -C /lib/modules/$(shell uname -r)/build M=`pwd`
