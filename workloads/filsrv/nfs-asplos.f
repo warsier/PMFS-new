@@ -48,7 +48,7 @@ define process name=filereader,instances=1
     flowop readwholefile name=readfile1,fd=1,iosize=$iosize
     flowop closefile name=closefile3,fd=1
     flowop deletefile name=deletefile1,filesetname=bigfileset
-    flowop statfile name=statfile1,filesetname=bigfileset
+    #flowop statfile name=statfile1,filesetname=bigfileset
   }
 }
 

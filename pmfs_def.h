@@ -90,7 +90,7 @@ struct pmfs_direntry {
  *    a 64 byte log-entry can store 48 bytes of data and we would like
  *    to log an inode using only 2 log-entries
  * 2) root must be immediately after the qw containing height because we update
- *    root and height atomically using cmpxchg16b in pmfs_decrease_btree_height 
+ *    root and height atomically using cmpxchg16b in pmfs_decrease_btree_height
  * 3) i_size, i_ctime, and i_mtime must be in that order and i_size must be at
  *    16 byte aligned offset from the start of the inode. We use cmpxchg16b to
  *    update these three fields atomically.
@@ -123,8 +123,8 @@ struct pmfs_inode {
 	__le32 padding;     /* pad to ensure truncate_item starts 8-byte aligned */
 };
 
-/* This is a per-inode structure and follows immediately after the 
- * struct pmfs_inode. It is used to implement the truncate linked list and is 
+/* This is a per-inode structure and follows immediately after the
+ * struct pmfs_inode. It is used to implement the truncate linked list and is
  * by pmfs_truncate_add(), pmfs_truncate_del(), and pmfs_recover_truncate_list()
  * functions to manage the truncate list */
 struct pmfs_inode_truncate_item {
@@ -158,7 +158,7 @@ typedef struct pmfs_journal {
  * The fields are partitioned into static and dynamic fields. The static fields
  * never change after file system creation. This was primarily done because
  * pmfs_get_block() returns NULL if the block offset is 0 (helps in catching
- * bugs). So if we modify any field using journaling (for consistency), we 
+ * bugs). So if we modify any field using journaling (for consistency), we
  * will have to modify s_sum which is at offset 0. So journaling code fails.
  * This (static+dynamic fields) is a temporary solution and can be avoided
  * once the file system becomes stable and pmfs_get_block() returns correct
@@ -177,7 +177,7 @@ struct pmfs_super_block {
 	/* points to the location of struct pmfs_inode for the inode table */
 	__le64          s_inode_table_offset;
 
-	__le64       s_start_dynamic; 
+	__le64       s_start_dynamic;
 
 	/* all the dynamic fields should go here */
 	/* s_mtime and s_wtime should be together and their order should not be
@@ -202,7 +202,7 @@ struct pmfs_super_block {
 #define PMFS_ROOT_INO (PMFS_INODE_SIZE)
 #define PMFS_BLOCKNODE_IN0 (PMFS_ROOT_INO + PMFS_INODE_SIZE)
 
-/* INODE HINT  START at 3 */ 
+/* INODE HINT  START at 3 */
 #define PMFS_FREE_INODE_HINT_START      (3)
 
 #include "pm_instr.h"
@@ -253,7 +253,7 @@ static inline void PERSISTENT_MARK(void)
 
 static inline void PERSISTENT_BARRIER(void)
 {
-	asm volatile ("sfence\n" : : ); 
+	asm volatile ("sfence\n" : : );
 	PM_FENCE();
 	if (support_pcommit) {
 		/* Do nothing */
@@ -264,13 +264,13 @@ static inline void pmfs_flush_buffer(void *buf, uint32_t len, bool fence)
 {
 	uint32_t i;
 	len = len + ((unsigned long)(buf) & (CACHELINE_SIZE - 1));
+	PM_FLUSHOPT(buf, len, len);
 	if (support_clwb) {
 		for (i = 0; i < len; i += CACHELINE_SIZE)
 			_mm_clwb(buf + i);
 	} else if (support_clflushopt) {
 		for (i = 0; i < len; i += CACHELINE_SIZE)
 			_mm_clflushopt(buf + i);
-		// PM_FLUSHOPT(buf, len, i);
 	} else {
 		for (i = 0; i < len; i += CACHELINE_SIZE)
 			_mm_clflush(buf + i);

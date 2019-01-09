@@ -35,6 +35,7 @@
 #include <linux/types.h>
 #include "pmfs.h"
 
+
 int measure_timing = 0;
 int support_clwb = 0;
 int support_clflushopt = 0;
@@ -61,6 +62,7 @@ struct pmfs_super_block *get_pmfs_super(void)
 }
 EXPORT_SYMBOL(get_pmfs_super);
 #endif
+
 
 void pmfs_error_mng(struct super_block *sb, const char *fmt, ...)
 {
@@ -363,7 +365,7 @@ static struct pmfs_inode *pmfs_init(struct super_block *sb,
 
 	if (!pmfs_check_size(sb, size)) {
 		pmfs_dbg("Specified PMFS size too small 0x%lx. Either increase"
-			" PMFS size, or reduce num. of inodes (minimum 32)" 
+			" PMFS size, or reduce num. of inodes (minimum 32)"
 			" or journal size (minimum 64KB)\n", size);
 		return ERR_PTR(-EINVAL);
 	}
@@ -567,7 +569,7 @@ static void pmfs_recover_truncate_list(struct super_block *sb)
 			inode->i_nlink, pi->i_size, li->i_truncatesize);
 		if (inode->i_nlink) {
 			/* set allocation hint */
-			pmfs_set_blocksize_hint(sb, pi, 
+			pmfs_set_blocksize_hint(sb, pi,
 					le64_to_cpu(li->i_truncatesize));
 			pmfs_setsize(inode, le64_to_cpu(li->i_truncatesize));
 			pmfs_update_isize(inode, pi);
@@ -863,9 +865,19 @@ restore_opt:
 
 static void pmfs_put_super(struct super_block *sb)
 {
+
 	struct pmfs_sb_info *sbi = PMFS_SB(sb);
 	struct pmfs_blocknode *i;
 	struct list_head *head = &(sbi->block_inuse_head);
+
+	/*** ADDED_BY_PMTEST ***/
+#ifdef PMTEST_KERNEL_DEBUG
+	//PMTest_CHECKER_END;
+	//printk(KERN_INFO "@@ PMFS End\n");
+	PMTest_ending();
+	PMTest_END;
+#endif
+	/*** END_ADDED_BY_PMTEST ***/
 
 #ifdef CONFIG_PMFS_TEST
 	if (first_pmfs_super == sbi->virt_addr)
@@ -1096,6 +1108,7 @@ static const struct export_operations pmfs_export_ops = {
 static int __init init_pmfs_fs(void)
 {
 	int rc = 0;
+	int i = 0;
 
 	rc = init_blocknode_cache();
 	if (rc)
@@ -1113,6 +1126,14 @@ static int __init init_pmfs_fs(void)
 	if (rc)
 		goto out3;
 
+	/*** ADDED_BY_PMTEST ***/
+#ifdef PMTEST_KERNEL_DEBUG
+	PMTest_initDevice();
+	//printk(KERN_INFO "@@ PMFS Start\n");
+	PMTest_START;
+#endif
+	/*** END_ADDED_BY_PMTEST ***/
+
 	return 0;
 
 out3:
@@ -1127,11 +1148,16 @@ out1:
 static void __exit exit_pmfs_fs(void)
 {
 	printk(KERN_INFO "Total epochs : %ld\n",
-		atomic64_read(&tot_epoch_count));	
+		atomic64_read(&tot_epoch_count));
 	unregister_filesystem(&pmfs_fs_type);
 	destroy_inodecache();
 	destroy_blocknode_cache();
 	destroy_transaction_cache();
+	/*** ADDED_BY_PMTEST ***/
+#ifdef PMTEST_KERNEL_DEBUG
+	PMTest_exitDevice();
+#endif
+	/*** END_ADDED_BY_PMTEST ***/
 }
 
 MODULE_AUTHOR("Intel Corporation <linux-pmfs@intel.com>");

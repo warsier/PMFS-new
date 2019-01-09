@@ -1,6 +1,6 @@
 /*
  * Macros to instrument PM reads and writes
- * Author : Sanketh Nalli 
+ * Author : Sanketh Nalli
  * Contact: nalli@wisc.edu
  *
  * The value returned by code surrounded by {}
@@ -8,14 +8,19 @@
  * the block. These macros do not perform any
  * operations on the persistent variable itself,
  * and hence do not introduce any extra accesses
- * to persistent memory. 
- * 
+ * to persistent memory.
+ *
  */
 
 #ifndef PM_INSTR_H
 #define PM_INSTR_H
 
 #include <linux/types.h>
+
+#define PMTEST_KERNEL_CODE
+#define PMTEST_KERNEL_DEBUG
+#include "kernel_module.h"
+
 extern atomic64_t tot_epoch_count;
 
 #define __FILENAME__ 			\
@@ -68,6 +73,7 @@ extern unsigned int pmfs_tracemask;
                         __LINE__);                  \
     })
 
+#ifdef PMTEST_KERNEL_DEBUG
 #define PM_WRITE(pm_dst)                            \
     ({                                              \
         PM_TRACE("%s:%p:%lu:%s:%d\n",               \
@@ -76,8 +82,9 @@ extern unsigned int pmfs_tracemask;
                         sizeof((pm_dst)),           \
                         __FILENAME__,               \
                         __LINE__);                  \
-                                                    \
-        pm_dst;                                     \
+		PMTest_assign(       \
+			(void *)(&(pm_dst)), (sizeof(pm_dst)));	\
+		pm_dst;                                     \
     })
 
 #define PM_WRITE_P(pm_dst)                          \
@@ -88,8 +95,184 @@ extern unsigned int pmfs_tracemask;
                         sizeof((pm_dst)),           \
                         __FILENAME__,               \
                         __LINE__);                  \
-                                                    \
-        &(pm_dst);                                  \
+		PMTest_assign(       \
+			(void *)(&(pm_dst)), (sizeof(pm_dst)));	\
+		&(pm_dst);                                  \
+    })
+
+#define PM_EQU(pm_dst, y)                           \
+    ({                                              \
+            PM_TRACE("%s:%p:%lu:%s:%d\n",           \
+                        PM_WRT_MARKER,              \
+                        &(pm_dst),                  \
+                        sizeof((pm_dst)),           \
+                        __FILENAME__,               \
+                        __LINE__);                  \
+		PMTest_assign(       \
+			(void *)(&(pm_dst)), (sizeof(pm_dst)));	\
+            pm_dst = y;                             \
+    })
+
+#define PM_OR_EQU(pm_dst, y)                        \
+    ({                                              \
+            PM_TRACE("%s:%p:%lu:%s:%d\n",           \
+                        PM_WRT_MARKER,              \
+                        &(pm_dst),                  \
+                        sizeof((pm_dst)),           \
+                        __FILENAME__,               \
+                        __LINE__);                  \
+		PMTest_assign(   \
+			(void *)(&(pm_dst)), sizeof((pm_dst))); \
+            pm_dst |= y;                            \
+    })
+
+#define PM_AND_EQU(pm_dst, y)                       \
+    ({                                              \
+            PM_TRACE("%s:%p:%lu:%s:%d\n",           \
+                        PM_WRT_MARKER,              \
+                        &(pm_dst),                  \
+                        sizeof((pm_dst)),           \
+                        __FILENAME__,               \
+                        __LINE__);                  \
+		PMTest_assign(    \
+			(void *)(&(pm_dst)), sizeof((pm_dst))); \
+            pm_dst &= y;                            \
+    })
+
+#define PM_ADD_EQU(pm_dst, y)                       \
+    ({                                              \
+            PM_TRACE("%s:%p:%lu:%s:%d\n",           \
+                        PM_WRT_MARKER,              \
+                        &(pm_dst),                  \
+                        sizeof((pm_dst)),           \
+                        __FILENAME__,               \
+                        __LINE__);                  \
+		PMTest_assign(   \
+			(void *)(&(pm_dst)), sizeof((pm_dst))); \
+            pm_dst += y;                            \
+    })
+
+#define PM_SUB_EQU(pm_dst, y)                       \
+    ({                                              \
+            PM_TRACE("%s:%p:%lu:%s:%d\n",           \
+                        PM_WRT_MARKER,              \
+                        &(pm_dst),                  \
+                        sizeof((pm_dst)),           \
+                        __FILENAME__,               \
+                        __LINE__);                  \
+		PMTest_assign(    \
+			(void *)(&(pm_dst)), sizeof((pm_dst))); \
+            pm_dst -= y;                            \
+    })
+
+/* PM Writes to a range of memory */
+#define PM_MEMSET(pm_dst, val, sz)                  \
+    ({                                              \
+            PM_TRACE("%s:%p:%lu:%s:%d\n",           \
+                        PM_WRT_MARKER,              \
+                        (pm_dst),                   \
+                        (unsigned long)sz,          \
+                        __FILENAME__,               \
+                        __LINE__);                  \
+		PMTest_assign(    \
+ 					   (void *)(pm_dst), (sz)); \
+            memset(pm_dst, val, sz);                \
+    })
+
+#define PM_MEMCPY(pm_dst, src, sz)                  \
+    ({                                              \
+            PM_TRACE("%s:%p:%lu:%s:%d\n",           \
+                        PM_WRT_MARKER,              \
+                        (pm_dst),                   \
+                        (unsigned long)sz,          \
+                        __FILENAME__,               \
+                        __LINE__);                  \
+		PMTest_assign(   \
+					   (void *)(pm_dst), (sz)); \
+            memcpy(pm_dst, src, sz);                \
+    })
+
+#define PM_STRCPY(pm_dst, src)                      \
+    ({                                              \
+            PM_TRACE("%s:%p:%u:%s:%d\n",            \
+                        PM_WRT_MARKER,              \
+                        (pm_dst),                   \
+                        min((int)PMFS_NAME_LEN,     \
+                            (int)strlen((src))),    \
+                        __FILENAME__,               \
+                        __LINE__);                  \
+		PMTest_assign(    \
+						(void *)(pm_dst),       \
+		min((int)PMFS_NAME_LEN, (int)strlen((src)))); \
+            strcpy(pm_dst, src);                    \
+    })
+
+#define PM_FLUSH(pm_dst, count, done)               \
+    ({                                              \
+        PM_TRACE("%s:%p:%u:%u:%s:%d\n",             \
+                    PM_FLUSH_MARKER,                \
+                    (pm_dst),                       \
+                    done,                           \
+                    count,                          \
+                    __FILENAME__,                   \
+                    __LINE__                        \
+                );                                  \
+        PMTest_flush((void *)(pm_dst), count); \
+    })
+#define PM_FLUSHOPT(pm_dst, count, done)            \
+    ({                                              \
+        PM_TRACE("%s:%p:%u:%u:%s:%d\n",             \
+                    PM_FLUSHOPT_MARKER,             \
+                    (pm_dst),                       \
+                    done,                           \
+                    count,                          \
+                    __FILENAME__,                   \
+                    __LINE__                        \
+                );                                  \
+        PMTest_flush((void *)(pm_dst), count); \
+    })
+
+#define PM_COMMIT()                                 \
+    ({                                              \
+        PM_TRACE("%s:%s:%d\n", PM_COMMIT_MARKER,    \
+                    __FILENAME__, __LINE__);        \
+        PMTest_commit(); \
+    })
+#define PM_BARRIER()                                \
+    ({                                              \
+        PM_TRACE("%s:%s:%d\n", PM_BARRIER_MARKER,   \
+                    __FILENAME__, __LINE__);        \
+        PMTest_barrier(); \
+    })
+
+#define PM_FENCE()                                  \
+    ({                                              \
+        PM_TRACE("%s:%s:%d\n", PM_FENCE_MARKER,     \
+                    __FILENAME__, __LINE__);        \
+        PMTest_fence(); \
+	atomic64_inc(&tot_epoch_count);             \
+    })
+#else // PMTEST_KERNEL_DEBUG
+#define PM_WRITE(pm_dst)                            \
+    ({                                              \
+        PM_TRACE("%s:%p:%lu:%s:%d\n",               \
+                        PM_WRT_MARKER,              \
+                        &(pm_dst),                  \
+                        sizeof((pm_dst)),           \
+                        __FILENAME__,               \
+                        __LINE__);                  \
+		pm_dst;                                     \
+    })
+
+#define PM_WRITE_P(pm_dst)                          \
+    ({                                              \
+        PM_TRACE("%s:%p:%lu:%s:%d\n",               \
+                        PM_WRT_MARKER,              \
+                        &(pm_dst),                  \
+                        sizeof((pm_dst)),           \
+                        __FILENAME__,               \
+                        __LINE__);                  \
+		&(pm_dst);                                  \
     })
 
 #define PM_EQU(pm_dst, y)                           \
@@ -157,7 +340,7 @@ extern unsigned int pmfs_tracemask;
                         __FILENAME__,               \
                         __LINE__);                  \
             memset(pm_dst, val, sz);                \
-    }) 
+    })
 
 #define PM_MEMCPY(pm_dst, src, sz)                  \
     ({                                              \
@@ -168,7 +351,7 @@ extern unsigned int pmfs_tracemask;
                         __FILENAME__,               \
                         __LINE__);                  \
             memcpy(pm_dst, src, sz);                \
-    })              
+    })
 
 #define PM_STRCPY(pm_dst, src)                      \
     ({                                              \
@@ -182,110 +365,8 @@ extern unsigned int pmfs_tracemask;
             strcpy(pm_dst, src);                    \
     })
 
-#define PM_MOVNTI(pm_dst, count, copied)            \
-    ({                                              \
-            PM_TRACE("%s:%p:%lu:%lu:%s:%d\n",       \
-                        PM_NTI,                     \
-                        (pm_dst),                   \
-                        (unsigned long)copied,      \
-                        (unsigned long)count,       \
-                        __FILENAME__,               \
-                        __LINE__                    \
-                    );                              \
-            0;                                      \
-    })
-
-#define PM_MOVNTI_DI(pm_dst, count, copied)         \
-    ({                                              \
-            PM_TRACE("%s:%p:%lu:%lu:%s:%d\n",       \
-                        PM_DI_MARKER,               \
-                        (pm_dst),                   \
-                        (unsigned long)copied,      \
-                        (unsigned long)count,       \
-                        __FILENAME__,               \
-                        __LINE__                    \
-                    );                              \
-            0;                                      \
-    })
-
-
-/* PM Read macros */
-/* Return the data    of persistent variable */
-#define PM_READ(pm_src)                             \
-    ({                                              \
-            PM_TRACE("%s:%p:%lu:%s:%d\n",           \
-                        PM_RD_MARKER,               \
-                        &(pm_src),                  \
-                        sizeof((pm_src)),           \
-                        __FILENAME__,               \
-                        __LINE__);                  \
-            (pm_src);                               \
-    })     
-
-/* Return the address of persistent variable */
-#define PM_READ_P(pm_src)                           \
-    ({                                              \
-            PM_TRACE("%s:%p:%lu:%s:%d\n",           \
-                        PM_RD_MARKER,               \
-                        &(pm_src),                  \
-                        sizeof((pm_src)),           \
-                        __FILENAME__,               \
-                        __LINE__);                  \
-            &(pm_src);                              \
-    })    
-
-/* Return the address of persistent variable */
-#define PM_RD_WR_P(pm_src)                          \
-    ({                                              \
-        PM_TRACE("%s:%p:%lu:%s:%d\n",               \
-                        PM_RD_MARKER,               \
-                        &(pm_src),                  \
-                        sizeof((pm_src)),           \
-                        __FILENAME__,               \
-                        __LINE__);                  \
-        PM_TRACE("%s:%p:%lu:%s:%d\n",               \
-                        PM_WRT_MARKER,              \
-                        &(pm_src),                  \
-                        sizeof((pm_src)),           \
-                        __FILENAME__,               \
-                        __LINE__);                  \
-        &(pm_src);                                  \
-    })    
-
-/* PM Reads to a range of memory */
-#define PM_MEMCMP(pm_dst, src, sz)                  \
-    ({                                              \
-            PM_TRACE("%s:%p:%lu:%s:%d\n",           \
-                        PM_RD_MARKER,               \
-                        (pm_dst),                   \
-                        (unsigned long)sz,          \
-                        __FILENAME__,               \
-                        __LINE__);                  \
-            memcmp(pm_dst, src, sz);                \
-    })
-
-
-#define start_epoch()       ({;})
-#define end_epoch()         ({;})
-
-#define PM_TX_BEGIN()                               \
-    ({                                              \
-        PM_TRACE("%s:%s:%d\n",                      \
-                PM_TX_START,                        \
-                __FILENAME__,                       \
-                __LINE__);                          \
-    })
-
-#define PM_TX_COMMIT()                              \
-    ({                                              \
-        PM_TRACE("%s:%s:%d\n",                      \
-                PM_TX_END,                          \
-                __FILENAME__,                       \
-                __LINE__);                          \
-    })
-
-/* PM Persist operations 
- * (done/copied) followed by count to maintain 
+/* PM Persist operations
+ * (done/copied) followed by count to maintain
  * uniformity with other macros
  */
 #define PM_FLUSH(pm_dst, count, done)               \
@@ -338,5 +419,110 @@ extern unsigned int pmfs_tracemask;
                     __FILENAME__, __LINE__);        \
 	atomic64_inc(&tot_epoch_count);             \
     })
+#endif // PMTEST_KERNEL_DEBUG
+
+#define PM_MOVNTI(pm_dst, count, copied)            \
+    ({                                              \
+            PM_TRACE("%s:%p:%lu:%lu:%s:%d\n",       \
+                        PM_NTI,                     \
+                        (pm_dst),                   \
+                        (unsigned long)copied,      \
+                        (unsigned long)count,       \
+                        __FILENAME__,               \
+                        __LINE__                    \
+                    );                              \
+            0;                                      \
+    })
+
+#define PM_MOVNTI_DI(pm_dst, count, copied)         \
+    ({                                              \
+            PM_TRACE("%s:%p:%lu:%lu:%s:%d\n",       \
+                        PM_DI_MARKER,               \
+                        (pm_dst),                   \
+                        (unsigned long)copied,      \
+                        (unsigned long)count,       \
+                        __FILENAME__,               \
+                        __LINE__                    \
+                    );                              \
+            0;                                      \
+    })
+
+
+/* PM Read macros */
+/* Return the data    of persistent variable */
+#define PM_READ(pm_src)                             \
+    ({                                              \
+            PM_TRACE("%s:%p:%lu:%s:%d\n",           \
+                        PM_RD_MARKER,               \
+                        &(pm_src),                  \
+                        sizeof((pm_src)),           \
+                        __FILENAME__,               \
+                        __LINE__);                  \
+            (pm_src);                               \
+    })
+
+/* Return the address of persistent variable */
+#define PM_READ_P(pm_src)                           \
+    ({                                              \
+            PM_TRACE("%s:%p:%lu:%s:%d\n",           \
+                        PM_RD_MARKER,               \
+                        &(pm_src),                  \
+                        sizeof((pm_src)),           \
+                        __FILENAME__,               \
+                        __LINE__);                  \
+            &(pm_src);                              \
+    })
+
+/* Return the address of persistent variable */
+#define PM_RD_WR_P(pm_src)                          \
+    ({                                              \
+        PM_TRACE("%s:%p:%lu:%s:%d\n",               \
+                        PM_RD_MARKER,               \
+                        &(pm_src),                  \
+                        sizeof((pm_src)),           \
+                        __FILENAME__,               \
+                        __LINE__);                  \
+        PM_TRACE("%s:%p:%lu:%s:%d\n",               \
+                        PM_WRT_MARKER,              \
+                        &(pm_src),                  \
+                        sizeof((pm_src)),           \
+                        __FILENAME__,               \
+                        __LINE__);                  \
+        &(pm_src);                                  \
+    })
+
+/* PM Reads to a range of memory */
+#define PM_MEMCMP(pm_dst, src, sz)                  \
+    ({                                              \
+            PM_TRACE("%s:%p:%lu:%s:%d\n",           \
+                        PM_RD_MARKER,               \
+                        (pm_dst),                   \
+                        (unsigned long)sz,          \
+                        __FILENAME__,               \
+                        __LINE__);                  \
+            memcmp(pm_dst, src, sz);                \
+    })
+
+
+#define start_epoch()       ({;})
+#define end_epoch()         ({;})
+
+#define PM_TX_BEGIN()                               \
+    ({                                              \
+        PM_TRACE("%s:%s:%d\n",                      \
+                PM_TX_START,                        \
+                __FILENAME__,                       \
+                __LINE__);                          \
+    })
+
+#define PM_TX_COMMIT()                              \
+    ({                                              \
+        PM_TRACE("%s:%s:%d\n",                      \
+                PM_TX_END,                          \
+                __FILENAME__,                       \
+                __LINE__);                          \
+    })
+
+
 
 #endif /* PM_INSTR_H */

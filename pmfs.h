@@ -29,6 +29,9 @@
 #define PAGE_SHIFT_2M 21
 #define PAGE_SHIFT_1G 30
 
+//PMTEST
+#define MAX_TX 1000000
+
 #define PMFS_ASSERT(x)                                                 \
 	if (!(x)) {                                                     \
 		printk(KERN_WARNING "assertion failed %s:%d: %s\n",     \

@@ -93,6 +93,7 @@ static inline void pmfs_undo_logentry(struct super_block *sb,
 		PM_MEMCPY(data, le->data, le->size);
 		pmfs_memlock_range(sb, data, le->size);
 		pmfs_flush_buffer(data, le->size, false);
+		// PMTest_isPersistent(data, le->size);
 	}
 }
 
@@ -129,8 +130,10 @@ static void pmfs_flush_transaction(struct super_block *sb,
 				pmfs_memunlock_range(sb, data, le->size);
 				PM_MEMCPY(data, le->data, le->size);
 				pmfs_memlock_range(sb, data, le->size);
-			} else
+			} else {
 				pmfs_flush_buffer(data, le->size, false);
+				// PMTest_isPersistent(data, le->size);
+			}
 		}
 	}
 }
@@ -139,6 +142,7 @@ static inline void invalidate_gen_id(pmfs_logentry_t *le)
 {
 	PM_EQU(le->gen_id, 0);
 	pmfs_flush_buffer(le, LOGENTRY_SIZE, false);
+	//PMTest_isPersistent(le, LOGENTRY_SIZE);
 }
 
 /* can be called by either during log cleaning or during journal recovery */
@@ -181,6 +185,7 @@ static void pmfs_redo_transaction(struct super_block *sb,
 				pmfs_memlock_range(sb, data, le->size);
 			}
 			pmfs_flush_buffer(data, le->size, false);
+			// PMTest_isPersistent(data, le->size);
 		}
 		le++;
 	}
@@ -221,7 +226,7 @@ static uint32_t pmfs_recover_transaction(struct super_block *sb, uint32_t head,
 		/* Handle uncommitted transactions */
 		if ((gen_id == le16_to_cpu(le->gen_id))
 			&& (le->type & LE_COMMIT || le->type & LE_ABORT)) {
-			BUG_ON(trans.transaction_id == 
+			BUG_ON(trans.transaction_id ==
 				le32_to_cpu(le->transaction_id));
 			le++;
 			break;
@@ -385,6 +390,7 @@ static int pmfs_clean_journal(struct super_block *sb, bool unmount,
 			le32_to_cpu(journal->head), le32_to_cpu(journal->tail));
 		PERSISTENT_BARRIER();
 	}
+	PMTest_isPersistent(&journal->head, sizeof(journal->head));
 	pmfs_dbg_trans("leaving journal cleaning %x %x\n", head, tail);
 	if (take_lock)
 		mutex_unlock(&sbi->journal_mutex);
@@ -459,7 +465,7 @@ int pmfs_journal_hard_init(struct super_block *sb, uint64_t base,
 	PM_EQU(journal->base, cpu_to_le64(base));
 	PM_EQU(journal->size, cpu_to_le32(size));
 	PM_EQU(journal->gen_id, cpu_to_le16(1));
-	PM_EQU(journal->head, 0); 
+	PM_EQU(journal->head, 0);
 	PM_EQU(journal->tail, 0);
 	PM_EQU(journal->redo_logging, 0);
 	pmfs_memlock_range(sb, journal, sizeof(*journal));
@@ -522,6 +528,12 @@ pmfs_transaction_t *pmfs_new_transaction(struct super_block *sb,
 #endif
 	/* If it is an undo log, need one more log-entry for commit record */
 	PMFS_START_TIMING(new_trans_t, log_time);
+	/*** ADDED_BY_PMTEST ***/
+#ifdef PMTEST_KERNEL_DEBUG
+	// PMTest_CHECKER_START;
+#endif
+	/*** END_ADDED_BY_PMTEST ***/
+
 	PM_TX_BEGIN();
 
 	if (!sbi->redo_log)
@@ -584,6 +596,7 @@ again:
 		pmfs_memlock_range(sb, journal, sizeof(*journal));
 	}
 	pmfs_flush_buffer(&journal->tail, sizeof(u64), false);
+	// PMTest_isPersistent(&journal->tail, sizeof(u64));
 	mutex_unlock(&sbi->journal_mutex);
 
 	avail_size = avail_size - req_size;
@@ -596,6 +609,13 @@ again:
 	trans->start_addr = pmfs_get_block(sb, base);
 	trans->parent = (pmfs_transaction_t *)current->journal_info;
 	current->journal_info = trans;
+
+	/*** ADDED_BY_PMTEST ***/
+#ifdef PMTEST_KERNEL_DEBUG
+	// PMTest_transactionDelim();
+#endif
+	/*** END_ADDED_BY_PMTEST ***/
+
 	PMFS_END_TIMING(new_trans_t, log_time);
 	return trans;
 journal_full:
@@ -607,6 +627,13 @@ journal_full:
 	pmfs_err(sb, "avail size %u, freed size %u, request size %u\n",
 		avail_size, freed_size, req_size);
 	pmfs_free_transaction(trans);
+
+    /*** ADDED_BY_PMTEST ***/
+#ifdef PMTEST_KERNEL_DEBUG
+	// PMTest_transactionDelim();
+#endif
+	/*** END_ADDED_BY_PMTEST ***/
+
 	PMFS_END_TIMING(new_trans_t, log_time);
 	PM_TX_COMMIT();
 	return ERR_PTR(-EAGAIN);
@@ -628,6 +655,7 @@ static inline void pmfs_commit_logentry(struct super_block *sb,
 		pmfs_flush_buffer(le, LOGENTRY_SIZE, false);
 		PERSISTENT_MARK();
 		PERSISTENT_BARRIER();
+		PMTest_isPersistent(le, LOGENTRY_SIZE);
 		/* Update the FS in place */
 		pmfs_flush_transaction(sb, trans);
 	} else {
@@ -643,6 +671,7 @@ static inline void pmfs_commit_logentry(struct super_block *sb,
 		/* Atomically make the log entry valid */
 		PM_EQU(le->gen_id, cpu_to_le16(trans->gen_id));
 		pmfs_flush_buffer(le, LOGENTRY_SIZE, true);
+		PMTest_isPersistent(le, LOGENTRY_SIZE);
 	}
 }
 
@@ -730,8 +759,15 @@ int pmfs_commit_transaction(struct super_block *sb,
 {
 	timing_t commit_time;
 
-	if (trans == NULL)
+	if (trans == NULL) {
+	/*** ADDED_BY_PMTEST ***/
+#ifdef PMTEST_KERNEL_DEBUG
+		// PMTest_CHECKER_END;
+		PMTest_transactionDelim();
+#endif
+	/*** END_ADDED_BY_PMTEST ***/
 		return 0;
+	}
 	/* Add the commit log-entry */
 	pmfs_add_logentry(sb, trans, NULL, 0, LE_COMMIT);
 
@@ -743,6 +779,15 @@ int pmfs_commit_transaction(struct super_block *sb,
 	pmfs_free_transaction(trans);
 	PM_TX_COMMIT();
 	PMFS_END_TIMING(commit_trans_t, commit_time);
+
+
+	/*** ADDED_BY_PMTEST ***/
+#ifdef PMTEST_KERNEL_DEBUG
+	// PMTest_CHECKER_END;
+	PMTest_transactionDelim();
+#endif
+	/*** END_ADDED_BY_PMTEST ***/
+
 	return 0;
 }
 
@@ -812,6 +857,7 @@ static void pmfs_forward_journal(struct super_block *sb, struct pmfs_sb_info
 	PM_EQU(journal->head, journal->tail);
 	pmfs_memlock_range(sb, journal, sizeof(*journal));
 	pmfs_flush_buffer(journal, sizeof(*journal), false);
+	// PMTest_isPersistent(journal, sizeof(*journal));
 }
 
 static int pmfs_recover_undo_journal(struct super_block *sb)
@@ -902,4 +948,3 @@ int pmfs_recover_journal(struct super_block *sb)
 		pmfs_recover_undo_journal(sb);
 	return 0;
 }
-

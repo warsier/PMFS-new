@@ -165,9 +165,9 @@ static inline size_t memcpy_to_nvmm(char *kmem, loff_t offset,
 	if (support_clwb) {
 		copied = bytes - __copy_from_user(kmem + offset, buf, bytes);
 		pmfs_flush_buffer(kmem + offset, copied, 0);
-		/* 
- 		 * We don't have CLWB on Skylake, should we do CLFLUSHOPT ? 
- 		 * No, PMFS originally uses MOVNTI. 
+		/*
+ 		 * We don't have CLWB on Skylake, should we do CLFLUSHOPT ?
+ 		 * No, PMFS originally uses MOVNTI.
 		 */
 	} else {
 		copied = bytes - __copy_from_user_inatomic_nocache(kmem +
@@ -216,7 +216,7 @@ __pmfs_xip_file_write(struct address_space *mapping, const char __user *buf,
 		pmfs_xip_mem_protect(sb, xmem + offset, bytes, 0);
 		PMFS_END_TIMING(memcpy_w_t, memcpy_time);
 
-		/* if start or end dest address is not 8 byte aligned, 
+		/* if start or end dest address is not 8 byte aligned,
 	 	 * __copy_from_user_inatomic_nocache uses cacheable instructions
 	 	 * (instead of movnti) to write. So flush those cachelines. */
 		pmfs_flush_edge_cachelines(pos, copied, xmem + offset);
